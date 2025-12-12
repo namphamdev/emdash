@@ -285,7 +285,11 @@ current branch '${currentBranch}' ahead of base '${baseRef}'.`,
     const { workspacePath } = args || ({} as { workspacePath: string });
     try {
       // Ensure we're in a git repo
-      await execAsync('git rev-parse --is-inside-work-tree', { cwd: workspacePath });
+      try {
+        await execAsync('git rev-parse --is-inside-work-tree', { cwd: workspacePath });
+      } catch {
+        return { success: false, error: 'Not a git repository' };
+      }
 
       const queryFields = [
         'number',
@@ -349,7 +353,11 @@ current branch '${currentBranch}' ahead of base '${baseRef}'.`,
 
       try {
         // Ensure we're in a git repo
-        await execAsync('git rev-parse --is-inside-work-tree', { cwd: workspacePath });
+        try {
+          await execAsync('git rev-parse --is-inside-work-tree', { cwd: workspacePath });
+        } catch {
+          return { success: false, error: 'Not a git repository' };
+        }
 
         // Determine current branch
         const { stdout: currentBranchOut } = await execAsync('git branch --show-current', {

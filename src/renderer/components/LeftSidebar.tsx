@@ -217,7 +217,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
                               }}
                             >
                               <span className="block truncate">{typedProject.name}</span>
-                              <span className="hidden truncate text-xs text-muted-foreground sm:block">
+                              <span className="hidden truncate text-xs text-muted-foreground sm:block w-full">
                                 {typedProject.githubInfo?.repository || typedProject.path}
                               </span>
                             </button>

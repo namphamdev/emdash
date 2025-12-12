@@ -524,14 +524,7 @@ const AppContent: React.FC = () => {
             return;
           }
 
-          if (!gitInfo.isGitRepo) {
-            toast({
-              title: 'Project Opened',
-              description: `This directory is not a Git repository. Path: ${result.path}`,
-              variant: 'destructive',
-            });
-            return;
-          }
+          // Allow non-git repositories
 
           const remoteUrl = gitInfo.remote || '';
           const isGithubRemote = /github\.com[:/]/i.test(remoteUrl);
@@ -544,7 +537,7 @@ const AppContent: React.FC = () => {
             path: canonicalPath,
             repoKey,
             gitInfo: {
-              isGitRepo: true,
+              isGitRepo: gitInfo.isGitRepo,
               remote: gitInfo.remote || undefined,
               branch: gitInfo.branch || undefined,
               baseRef: computeBaseRef(gitInfo.baseRef, gitInfo.remote, gitInfo.branch),

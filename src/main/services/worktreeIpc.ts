@@ -53,12 +53,9 @@ export function registerWorktreeIpc(): void {
       }
     ) => {
       try {
-        await worktreeService.removeWorktree(
-          args.projectPath,
-          args.worktreeId,
-          args.worktreePath,
-          args.branch
-        );
+        // IMPORTANT: Do not delete any files or directories
+        // Users may not be using worktrees, and deleting paths could remove their .git directory
+        // Just return success to allow workspace deletion to proceed
         return { success: true };
       } catch (error) {
         console.error('Failed to remove worktree:', error);

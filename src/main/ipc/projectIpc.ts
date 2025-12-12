@@ -77,64 +77,66 @@ export function registerProjectIpc() {
       const gitPath = join(resolvedProjectPath, '.git');
       const isGitRepo = fs.existsSync(gitPath);
 
-      if (!isGitRepo) {
-        return { isGitRepo: false, path: resolvedProjectPath };
-      }
-
-      // Get remote URL
       let remote: string | null = null;
-      try {
-        const { stdout } = await execAsync('git remote get-url origin', {
-          cwd: resolvedProjectPath,
-        });
-        remote = stdout.trim();
-      } catch {}
-
-      // Get current branch
       let branch: string | null = null;
-      try {
-        const { stdout } = await execAsync('git branch --show-current', {
-          cwd: resolvedProjectPath,
-        });
-        branch = stdout.trim();
-      } catch {}
-
       let defaultBranch: string | null = null;
-      if (!branch) {
-        defaultBranch = await detectDefaultBranch(resolvedProjectPath, remote);
-      }
-
       let upstream: string | null = null;
       let aheadCount: number | null = null;
       let behindCount: number | null = null;
-      try {
-        const { stdout } = await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-          cwd: resolvedProjectPath,
-        });
-        upstream = stdout.trim();
-      } catch {}
+      let rootPath: string | null = null;
 
-      if (upstream) {
+      if (isGitRepo) {
+        // Get remote URL
         try {
-          const { stdout } = await execAsync('git rev-list --left-right --count HEAD...@{u}', {
+          const { stdout } = await execAsync('git remote get-url origin', {
             cwd: resolvedProjectPath,
           });
-          const [ahead, behind] = stdout.trim().split(/\s+/);
-          aheadCount = Number.parseInt(ahead, 10);
-          behindCount = Number.parseInt(behind, 10);
+          remote = stdout.trim();
+        } catch {}
+
+        // Get current branch
+        try {
+          const { stdout } = await execAsync('git branch --show-current', {
+            cwd: resolvedProjectPath,
+          });
+          branch = stdout.trim();
+        } catch {}
+
+        if (!branch) {
+          defaultBranch = await detectDefaultBranch(resolvedProjectPath, remote);
+        }
+
+        try {
+          const { stdout } = await execAsync(
+            'git rev-parse --abbrev-ref --symbolic-full-name @{u}',
+            {
+              cwd: resolvedProjectPath,
+            }
+          );
+          upstream = stdout.trim();
+        } catch {}
+
+        if (upstream) {
+          try {
+            const { stdout } = await execAsync('git rev-list --left-right --count HEAD...@{u}', {
+              cwd: resolvedProjectPath,
+            });
+            const [ahead, behind] = stdout.trim().split(/\s+/);
+            aheadCount = Number.parseInt(ahead, 10);
+            behindCount = Number.parseInt(behind, 10);
+          } catch {}
+        }
+
+        try {
+          const { stdout } = await execAsync('git rev-parse --show-toplevel', {
+            cwd: resolvedProjectPath,
+          });
+          const trimmed = stdout.trim();
+          if (trimmed) {
+            rootPath = await resolveRealPath(trimmed);
+          }
         } catch {}
       }
-
-      let rootPath: string | null = null;
-      try {
-        const { stdout } = await execAsync('git rev-parse --show-toplevel', {
-          cwd: resolvedProjectPath,
-        });
-        const trimmed = stdout.trim();
-        if (trimmed) {
-          rootPath = await resolveRealPath(trimmed);
-        }
-      } catch {}
 
       const baseRef = computeBaseRef(remote, branch || defaultBranch);
 
@@ -144,7 +146,7 @@ export function registerProjectIpc() {
         typeof behindCount === 'number' && Number.isFinite(behindCount) ? behindCount : undefined;
 
       return {
-        isGitRepo: true,
+        isGitRepo,
         remote,
         branch,
         baseRef,

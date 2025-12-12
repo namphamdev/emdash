@@ -9,6 +9,7 @@ const DEFAULT_PROVIDER_ID: ProviderId = 'claude';
 export interface RepositorySettings {
   branchTemplate: string; // e.g., 'agent/{slug}-{timestamp}'
   pushOnCreate: boolean;
+  createBranchOnNewTask: boolean; // whether to create a new branch when creating a task
 }
 
 export interface AppSettings {
@@ -40,6 +41,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   repository: {
     branchTemplate: 'agent/{slug}-{timestamp}',
     pushOnCreate: true,
+    createBranchOnNewTask: false,
   },
   projectPrep: {
     autoInstallOnOpenInEditor: true,
@@ -133,6 +135,7 @@ function normalizeSettings(input: AppSettings): AppSettings {
     repository: {
       branchTemplate: DEFAULT_SETTINGS.repository.branchTemplate,
       pushOnCreate: DEFAULT_SETTINGS.repository.pushOnCreate,
+      createBranchOnNewTask: DEFAULT_SETTINGS.repository.createBranchOnNewTask,
     },
     projectPrep: {
       autoInstallOnOpenInEditor: DEFAULT_SETTINGS.projectPrep.autoInstallOnOpenInEditor,
@@ -164,6 +167,9 @@ function normalizeSettings(input: AppSettings): AppSettings {
 
   out.repository.branchTemplate = template;
   out.repository.pushOnCreate = push;
+  out.repository.createBranchOnNewTask = Boolean(
+    repo?.createBranchOnNewTask ?? DEFAULT_SETTINGS.repository.createBranchOnNewTask
+  );
   // Project prep
   const prep = (input as any)?.projectPrep || {};
   out.projectPrep.autoInstallOnOpenInEditor = Boolean(

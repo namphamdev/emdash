@@ -26,18 +26,25 @@ export class RepositoryManager {
 
   async addRepository(path: string): Promise<Repo> {
     try {
-      // Validate that the path is a git repository
-      const { stdout } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree`);
-
-      if (stdout.trim() !== 'true') {
-        throw new Error('Not a git repository');
+      // Check if the path is a git repository
+      let isGitRepo = false;
+      try {
+        const { stdout } = await execAsync(`cd "${path}" && git rev-parse --is-inside-work-tree`);
+        isGitRepo = stdout.trim() === 'true';
+      } catch {
+        // Not a git repository, that's okay
       }
 
-      // Get repository info
-      const [origin, defaultBranch] = await Promise.all([
-        this.getOrigin(path),
-        this.getDefaultBranch(path),
-      ]);
+      // Get repository info (only if it's a git repo)
+      let origin = 'No origin';
+      let defaultBranch = 'main';
+
+      if (isGitRepo) {
+        [origin, defaultBranch] = await Promise.all([
+          this.getOrigin(path),
+          this.getDefaultBranch(path),
+        ]);
+      }
 
       const repo: Repo = {
         id: this.generateId(),
